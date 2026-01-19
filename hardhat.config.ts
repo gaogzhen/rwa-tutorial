@@ -44,7 +44,14 @@ export default defineConfig({
       type: "http",
       chainType: "l1",
       url: configVariable("AVALANCHE_FUJI_RPC_URL"), // Avalanche Fuji RPC URL
-      accounts: [configVariable("AVALANCHE_FUJI_PRIVATE_KEY")], // 部署账户私钥
+      accounts: [
+        // 私钥格式要求：
+        // - 必须是 0x 开头的 66 字符十六进制字符串
+        // - 或者 64 字符十六进制字符串（会自动添加 0x）
+        // 使用 Hardhat Keystore 设置：npx hardhat keystore set AVALANCHE_FUJI_PRIVATE_KEY
+        // 注意：私钥必须存储在 Keystore 或环境变量中，格式正确
+        configVariable("AVALANCHE_FUJI_PRIVATE_KEY"),
+      ],
       chainId: 43113, // Avalanche Fuji 测试网链 ID
     },
   },

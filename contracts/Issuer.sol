@@ -15,7 +15,7 @@ import {FunctionsSource} from "./FunctionsSource.sol";
 contract Issuer is FunctionsClient, FunctionsSource, OwnerIsCreator {
     using FunctionsRequest for FunctionsRequest.Request;
 
-    error LatestIssueInProcess();
+    error LatestIssueInProgress();
 
     struct FractionalizedNft {
         address to;
@@ -27,36 +27,25 @@ contract Issuer is FunctionsClient, FunctionsSource, OwnerIsCreator {
     bytes32 internal s_lastRequestId;
     uint256 private s_nextTokenId;
 
-    mapping(bytes32 requestId => FractionalizedNft) internal s_issuesInProcess;
+    mapping(bytes32 requestId => FractionalizedNft) internal s_issuesInProgress;
 
-    constructor(
-        address realEstateToken,
-        address functionsRouterAddress
-    ) FunctionsClient(functionsRouterAddress) {
+    constructor(address realEstateToken, address functionsRouterAddress) FunctionsClient(functionsRouterAddress) {
         i_realEstateToken = RealEstateToken(realEstateToken);
     }
 
-    function issue(
-        address to,
-        uint256 amount,
-        uint64 subscriptionId,
-        uint32 gasLimit,
-        bytes32 donId
-    ) external onlyOwner returns (bytes32 requestId) {
-        if (s_lastRequestId != bytes32(0)) {
-            revert LatestIssueInProcess();
-        }
+    function issue(address to, uint256 amount, uint64 subscriptionId, uint32 gasLimit, bytes32 donID)
+        external
+        onlyOwner
+        returns (bytes32 requestId)
+    {
+        if (s_lastRequestId != bytes32(0)) revert LatestIssueInProgress();
 
         FunctionsRequest.Request memory req;
         req.initializeRequestForInlineJavaScript(this.getNftMetadata());
-        requestId = _sendRequest(
-            req.encodeCBOR(),
-            subscriptionId,
-            gasLimit,
-            donId
-        );
+        requestId = _sendRequest(req.encodeCBOR(), subscriptionId, gasLimit, donID);
 
-        s_issuesInProcess[requestId] = FractionalizedNft(to, amount);
+        s_issuesInProgress[requestId] = FractionalizedNft(to, amount);
+
         s_lastRequestId = requestId;
     }
 
@@ -64,24 +53,20 @@ contract Issuer is FunctionsClient, FunctionsSource, OwnerIsCreator {
         s_lastRequestId = bytes32(0);
     }
 
-    function fulfillRequest(
-        bytes32 requestId,
-        bytes memory response,
-        bytes memory err
-    ) internal override {
+    function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
         if (err.length != 0) {
             revert(string(err));
         }
 
-        if (s_lastRequestId != requestId) {
-            return;
+        if (s_lastRequestId == requestId) {
+            string memory tokenURI = string(response);
+
+            uint256 tokenId = s_nextTokenId++;
+            FractionalizedNft memory fractionalizedNft = s_issuesInProgress[requestId];
+
+            i_realEstateToken.mint(fractionalizedNft.to, tokenId, fractionalizedNft.amount, "", tokenURI);
+
+            s_lastRequestId = bytes32(0);
         }
-
-        string memory tokenURI = string(response);
-        uint256 tokenId = s_nextTokenId++;
-        FractionalizedNft memory fractionalizedNft = s_issuesInProcess[requestId];
-
-        i_realEstateToken.mint(fractionalizedNft.to, tokenId, fractionalizedNft.amount, "", tokenURI);
-        s_lastRequestId = bytes32(0);
     }
 }

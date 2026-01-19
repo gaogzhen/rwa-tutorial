@@ -215,7 +215,7 @@ contract RwaLending is IERC1155Receiver, OwnerIsCreator, ReentrancyGuard {
        uint256 _price;
        uint256 _updatedAt;
 
-       try s_usdcUsdAggregator.latestRoundData() returns (uint80 roundId, \
+       try s_usdcUsdAggregator.latestRoundData() returns (uint80 roundId, 
        int256 price, 
        uint256, /* startedAt */
        uint256 updatedAt, 

@@ -58,13 +58,30 @@ export AVALANCHE_FUJI_PRIVATE_KEY="your_private_key_here"
 
 ## 部署方式
 
-### 方式 1: 使用默认参数部署
+### 方式 1: 一键部署所有合约（推荐）
+
+如果您想同时部署 RealEstateToken 和 Issuer，可以使用组合部署模块：
+
+```bash
+npx hardhat ignition deploy ignition/modules/DeployAll.ts --network avalancheFuji
+```
+
+这会自动：
+1. 部署 RealEstateToken
+2. 部署 Issuer
+3. 设置 RealEstateToken 的 Issuer
+
+详细说明请参考 [DEPLOY_ISSUER.md](./DEPLOY_ISSUER.md)
+
+### 方式 2: 仅部署 RealEstateToken
+
+如果您只想部署 RealEstateToken，稍后再部署 Issuer：
 
 ```bash
 npx hardhat ignition deploy ignition/modules/RealEstateToken.ts --network avalancheFuji
 ```
 
-### 方式 2: 使用自定义参数部署
+### 方式 3: 使用自定义参数部署
 
 在部署时可以通过参数覆盖默认值：
 
