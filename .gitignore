@@ -44,3 +44,6 @@ pnpm-debug.log*
 
 # macos system files
 .DS_Store
+
+# deployment files
+ignition/deployments
